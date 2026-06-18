@@ -234,7 +234,7 @@
     <div class="header-actions">
       <select id="ratingSelect" class="rating-select" aria-label="Rating">
         <option value="">All ratings</option>
-        <option value="safe">Safe</option>
+        <option value="safe" selected>Safe</option>
         <option value="suggestive">Suggestive</option>
         <option value="borderline">Borderline</option>
         <option value="explicit">Explicit</option>
@@ -268,7 +268,7 @@
     let currentUrl = ''
     let page = 0
     let totalCount = 0
-    let selectedRating = ''
+    let selectedRating = 'safe'
     const PAGE_SIZE = 6
 
     function callPlugin(method, params) {
