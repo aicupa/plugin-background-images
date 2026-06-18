@@ -20,9 +20,16 @@ function saveConfig(data) {
 
 module.exports = createPlugin((api) => {
   return {
-    async fetchImages({ offset = 0, limit = 6 } = {}) {
+    async fetchImages({ offset = 0, limit = 6, rating } = {}) {
       try {
-        const url = `${API_BASE}?limit=${limit}&offset=${offset}`;
+        const params = new URLSearchParams({
+          limit: String(limit),
+          offset: String(offset),
+        });
+        if (rating) {
+          params.set("rating", rating);
+        }
+        const url = `${API_BASE}?${params.toString()}`;
         const res = await fetch(url);
         if (!res.ok) {
           return { ok: false, error: `API error: ${res.status}` };
@@ -47,7 +54,7 @@ module.exports = createPlugin((api) => {
       const config = loadConfig();
       config.backgroundImage = url;
       saveConfig(config);
-      api.reload(filePath);
+      api.relaunch();
 
       return { ok: true, result: { url } };
     },

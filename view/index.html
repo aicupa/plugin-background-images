@@ -52,6 +52,28 @@
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
+      gap: 12px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rating-select {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: inherit;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .rating-select:focus {
+      outline: none;
+      border-color: var(--accent);
     }
 
     .title {
@@ -197,7 +219,16 @@
 <body>
   <div class="header">
     <span class="title">Choose Background</span>
-    <span class="page-info" id="pageInfo"></span>
+    <div class="header-actions">
+      <select id="ratingSelect" class="rating-select" aria-label="Rating">
+        <option value="">All ratings</option>
+        <option value="safe">Safe</option>
+        <option value="suggestive">Suggestive</option>
+        <option value="borderline">Borderline</option>
+        <option value="explicit">Explicit</option>
+      </select>
+      <span class="page-info" id="pageInfo"></span>
+    </div>
   </div>
 
   <div class="loading" id="loading">Loading...</div>
@@ -221,6 +252,7 @@
     let currentUrl = ''
     let page = 0
     let totalCount = 0
+    let selectedRating = ''
     const PAGE_SIZE = 6
 
     function callPlugin(method, params) {
@@ -272,7 +304,6 @@
     window.addEventListener('message', (event) => {
       const msg = event.data
       if (msg?.type === 'plugin-init') {
-        console.log('🚀 ~ index ~ msg:', msg);
         currentFilePath = msg.filePath || ''
         applyTheme(msg.theme)
         init()
@@ -303,7 +334,8 @@
       try {
         const data = unwrap(await callPlugin('fetchImages', {
           offset: page * PAGE_SIZE,
-          limit: PAGE_SIZE
+          limit: PAGE_SIZE,
+          rating: selectedRating || undefined
         }))
         totalCount = data?.count || 0
         renderGrid(data?.items || [])
@@ -387,6 +419,11 @@
 
     document.getElementById('nextBtn').addEventListener('click', function () {
       if ((page + 1) * PAGE_SIZE < totalCount) loadPage(page + 1)
+    })
+
+    document.getElementById('ratingSelect').addEventListener('change', function (e) {
+      selectedRating = e.target.value
+      loadPage(0)
     })
 
     document.getElementById('applyBtn').addEventListener('click', async function () {
