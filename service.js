@@ -36,6 +36,11 @@ module.exports = createPlugin((api) => {
       };
     },
 
+    async openLink({ url }) {
+      await api.openLink(url);
+      return { ok: true };
+    },
+
     async applyBackgroundImage({ url, backgroundSize }) {
       if (!url) {
         return { ok: false, error: "No image selected" };

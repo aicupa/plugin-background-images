@@ -222,7 +222,26 @@
       opacity: 0.6;
     }
 
-    .hidden {
+    .image-link {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .image-link a {
+      color: inherit;
+      opacity: 0.4;
+      font-size: 14px;
+      line-height: 1;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .image-link a:hover {
+      opacity: 0.8;
+    }
+
+.hidden {
       display: none !important;
     }
   </style>
@@ -257,6 +276,7 @@
       <option value="cover">Cover</option>
       <option value="contain">Contain</option>
     </select>
+    <span class="image-link hidden" id="imageLink"></span>
     <button class="apply-btn" id="applyBtn" disabled>Apply</button>
   </div>
 
@@ -413,6 +433,21 @@
       })
       updateApplyBtn()
       setStatus(url === currentUrl ? 'Current background' : 'Selected — click Apply to confirm')
+      updateImageLink(url)
+    }
+
+    function updateImageLink(url) {
+      const linkEl = document.getElementById('imageLink')
+      if (url) {
+        linkEl.innerHTML = '<a href="#" title="Open in browser">&#x1F517;</a>'
+        linkEl.querySelector('a').addEventListener('click', function (e) {
+          e.preventDefault()
+          callPlugin('openLink', { url })
+        })
+        linkEl.classList.remove('hidden')
+      } else {
+        linkEl.classList.add('hidden')
+      }
     }
 
     function updateApplyBtn() {
