@@ -1,0 +1,36 @@
+view/index.html
+  s_f69aed649984bd::t_ce706755f57300 211-222
+  s_f69aed649984bd::t_9e1b72c54d68fc 247
+  s_e3998ab1eb4650::t_41e0aa40ef69aa 340
+  s_e3998ab1eb4650::t_bc2871a2a62308 256-259
+  s_f69aed649984bd::t_ebee5eb7de65f4 373-375
+  s_e3998ab1eb4650::t_19cb71000e8975 455
+service.js
+  s_e3998ab1eb4650::t_bcaaf4c86cb8a1 30-36
+  s_e3998ab1eb4650::t_62cdd68f0b571f 39,44-47
+  s_e3998ab1eb4650::t_f714e5ff08f791 28-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "5bf983257ea819eed4afb49ad4cda49863184ae9",
+  "prompts": {},
+  "sessions": {
+    "s_e3998ab1eb4650": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "555facd0-cd0d-44fb-a27a-8d8150099155",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "muhai <muhai.li@tuya.com>"
+    },
+    "s_f69aed649984bd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a67a80f6-6989-4ac2-a976-2ebb88cf3599",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "muhai <muhai.li@tuya.com>"
+    }
+  }
+}
