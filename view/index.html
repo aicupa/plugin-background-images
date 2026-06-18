@@ -208,6 +208,18 @@
     .error {
       color: var(--error);
       opacity: 1;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .error:hover {
+      opacity: 0.7;
+    }
+
+    .error .retry-hint {
+      font-size: 11px;
+      opacity: 0.6;
     }
 
     .hidden {
@@ -232,7 +244,7 @@
   </div>
 
   <div class="loading" id="loading">Loading...</div>
-  <div class="error hidden" id="error"></div>
+  <div class="error hidden" id="error" onclick="loadPage(page)"></div>
   <div class="grid hidden" id="grid"></div>
 
   <div class="footer">
@@ -241,6 +253,10 @@
       <button id="nextBtn" disabled>Next</button>
     </div>
     <span class="status" id="status"></span>
+    <select id="sizeSelect" class="rating-select" aria-label="Background Size">
+      <option value="cover">Cover</option>
+      <option value="contain">Contain</option>
+    </select>
     <button class="apply-btn" id="applyBtn" disabled>Apply</button>
   </div>
 
@@ -321,6 +337,7 @@
         const data = unwrap(await callPlugin('getBackgroundImage', {}))
         currentUrl = data?.url || ''
         selectedUrl = currentUrl
+        document.getElementById('sizeSelect').value = data?.backgroundSize || 'cover'
         if (currentUrl) {
           setStatus('Current background selected')
         }
@@ -353,8 +370,9 @@
 
     function showError(msg) {
       document.getElementById('loading').classList.add('hidden')
-      document.getElementById('error').classList.remove('hidden')
-      document.getElementById('error').textContent = msg
+      const errorEl = document.getElementById('error')
+      errorEl.classList.remove('hidden')
+      errorEl.innerHTML = '<span>' + escapeHtml(msg) + '</span><span class="retry-hint">Click to retry</span>'
       document.getElementById('grid').classList.add('hidden')
     }
 
@@ -434,7 +452,7 @@
       try {
         await callPlugin('applyBackgroundImage', {
           url: selectedUrl,
-          filePath: currentFilePath
+          backgroundSize: document.getElementById('sizeSelect').value
         })
         currentUrl = selectedUrl
         setStatus('Background applied')

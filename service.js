@@ -1,22 +1,6 @@
 const { createPlugin } = require("@aicupa/api");
-const path = require("path");
-const os = require("os");
-const fs = require("fs");
 
-const configPath = path.join(os.homedir(), ".todoListNative.json");
 const API_BASE = "http://api.nekosapi.com/v4/images";
-
-function loadConfig() {
-  try {
-    return JSON.parse(fs.readFileSync(configPath, "utf-8"));
-  } catch (_) {
-    return {};
-  }
-}
-
-function saveConfig(data) {
-  fs.writeFileSync(configPath, JSON.stringify(data));
-}
 
 module.exports = createPlugin((api) => {
   return {
@@ -41,21 +25,26 @@ module.exports = createPlugin((api) => {
       }
     },
 
-    getBackgroundImage() {
-      const config = loadConfig();
-      return { ok: true, result: { url: config.backgroundImage || "" } };
+    async getBackgroundImage() {
+      const config = (await api.getConfig()) || {};
+      return {
+        ok: true,
+        result: {
+          url: config.backgroundImage || "",
+          backgroundSize: config.backgroundSize || "cover",
+        },
+      };
     },
 
-    async applyBackgroundImage({ url, filePath }) {
+    async applyBackgroundImage({ url, backgroundSize }) {
       if (!url) {
         return { ok: false, error: "No image selected" };
       }
 
-      const config = loadConfig();
-      config.backgroundImage = url;
-      saveConfig(config);
-      api.relaunch();
-
+      await api.setBackground({
+        backgroundImage: url,
+        backgroundSize: backgroundSize || "cover",
+      });
       return { ok: true, result: { url } };
     },
   };
