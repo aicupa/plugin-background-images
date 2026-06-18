@@ -4,11 +4,421 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Background Images</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --accent: #1890ff;
+      --accent-hover: #40a9ff;
+      --error: #ff4d4f;
+      --border: rgba(128, 128, 128, 0.35);
+      --card-bg: color-mix(in srgb, currentColor 6%, transparent);
+      --btn-disabled-bg: color-mix(in srgb, currentColor 12%, transparent);
+      --btn-disabled-text: color-mix(in srgb, currentColor 35%, transparent);
+    }
+
+    body.dark {
+      --border: rgba(255, 255, 255, 0.18);
+      --error: #ff7875;
+    }
+
+    body:not(.dark) {
+      --border: rgba(0, 0, 0, 0.15);
+      --error: #cf1322;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 12px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .page-info {
+      font-size: 12px;
+      opacity: 0.6;
+    }
+
+    .grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .card {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      background: var(--card-bg);
+      transition: border-color 0.2s, transform 0.15s;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+    }
+
+    .card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card .badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      gap: 8px;
+    }
+
+    .pager {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: inherit;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .apply-btn {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      min-width: 80px;
+    }
+
+    .apply-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+      color: #fff;
+    }
+
+    .apply-btn:disabled {
+      background: var(--btn-disabled-bg);
+      border-color: transparent;
+      color: var(--btn-disabled-text);
+    }
+
+    .status {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      opacity: 0.6;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .loading,
+    .error {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.6;
+    }
+
+    .error {
+      color: var(--error);
+      opacity: 1;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
 </head>
 
 <body>
+  <div class="header">
+    <span class="title">Choose Background</span>
+    <span class="page-info" id="pageInfo"></span>
+  </div>
 
+  <div class="loading" id="loading">Loading...</div>
+  <div class="error hidden" id="error"></div>
+  <div class="grid hidden" id="grid"></div>
+
+  <div class="footer">
+    <div class="pager">
+      <button id="prevBtn" disabled>Previous</button>
+      <button id="nextBtn" disabled>Next</button>
+    </div>
+    <span class="status" id="status"></span>
+    <button class="apply-btn" id="applyBtn" disabled>Apply</button>
+  </div>
+
+  <script>
+    let callId = 0
+    const pending = {}
+    let currentFilePath = ''
+    let selectedUrl = ''
+    let currentUrl = ''
+    let page = 0
+    let totalCount = 0
+    const PAGE_SIZE = 6
+
+    function callPlugin(method, params) {
+      return new Promise((resolve, reject) => {
+        const id = ++callId
+        const timer = setTimeout(() => {
+          delete pending[id]
+          reject(new Error('timeout'))
+        }, 5000)
+        pending[id] = {
+          resolve: (v) => { clearTimeout(timer); resolve(v) },
+          reject: (e) => { clearTimeout(timer); reject(e) }
+        }
+        window.parent.postMessage({ type: 'plugin-call', id, method, params }, '*')
+      })
+    }
+
+    function unwrap(res) {
+      const inner = res?.result || res
+      return inner?.result !== undefined ? inner.result : inner
+    }
+
+    function isDarkColor(color) {
+      if (typeof color !== 'string') return false
+      if (color.includes('rgb')) {
+        const r = parseInt(color.split(',')[0].replace(/\D/g, ''), 10)
+        return r < 128
+      }
+      if (color.startsWith('#')) {
+        const hex = color.length === 4
+          ? color.slice(1).split('').map(function (c) { return c + c }).join('')
+          : color.slice(1, 7)
+        return parseInt(hex.slice(0, 2), 16) < 128
+      }
+      return false
+    }
+
+    function applyTheme(theme) {
+      if (!theme) return
+      if (theme.color) {
+        document.body.style.color = theme.color
+      }
+      if (theme.backgroundColor) {
+        document.body.style.backgroundColor = theme.backgroundColor
+        document.body.classList.toggle('dark', isDarkColor(theme.backgroundColor))
+      }
+    }
+
+    window.addEventListener('message', (event) => {
+      const msg = event.data
+      if (msg?.type === 'plugin-init') {
+        console.log('🚀 ~ index ~ msg:', msg);
+        currentFilePath = msg.filePath || ''
+        applyTheme(msg.theme)
+        init()
+        return
+      }
+      if (msg?.type === 'plugin-result' && pending[msg.id]) {
+        const { resolve, reject } = pending[msg.id]
+        delete pending[msg.id]
+        msg.error ? reject(new Error(msg.error)) : resolve(msg.result)
+      }
+    })
+
+    async function init() {
+      try {
+        const data = unwrap(await callPlugin('getBackgroundImage', {}))
+        currentUrl = data?.url || ''
+        selectedUrl = currentUrl
+        if (currentUrl) {
+          setStatus('Current background selected')
+        }
+      } catch (_) { }
+      loadPage(0)
+    }
+
+    async function loadPage(p) {
+      page = p
+      showLoading()
+      try {
+        const data = unwrap(await callPlugin('fetchImages', {
+          offset: page * PAGE_SIZE,
+          limit: PAGE_SIZE
+        }))
+        totalCount = data?.count || 0
+        renderGrid(data?.items || [])
+        updatePager()
+      } catch (e) {
+        showError(e.message || 'Failed to load')
+      }
+    }
+
+    function showLoading() {
+      document.getElementById('loading').classList.remove('hidden')
+      document.getElementById('error').classList.add('hidden')
+      document.getElementById('grid').classList.add('hidden')
+    }
+
+    function showError(msg) {
+      document.getElementById('loading').classList.add('hidden')
+      document.getElementById('error').classList.remove('hidden')
+      document.getElementById('error').textContent = msg
+      document.getElementById('grid').classList.add('hidden')
+    }
+
+    function renderGrid(items) {
+      document.getElementById('loading').classList.add('hidden')
+      document.getElementById('error').classList.add('hidden')
+      const grid = document.getElementById('grid')
+      grid.classList.remove('hidden')
+
+      if (items.length === 0) {
+        grid.innerHTML = ''
+        showError('No more images')
+        return
+      }
+
+      grid.innerHTML = items.map(function (item) {
+        const selected = item.url === selectedUrl ? ' selected' : ''
+        const rating = item.rating || ''
+        return '<div class="card' + selected + '" data-url="' + escapeAttr(item.url) + '">' +
+          '<img src="' + escapeAttr(item.url) + '" loading="lazy" alt="">' +
+          (rating ? '<span class="badge">' + escapeHtml(rating) + '</span>' : '') +
+          '</div>'
+      }).join('')
+
+      grid.querySelectorAll('.card').forEach(function (el) {
+        el.addEventListener('click', function () {
+          selectImage(el.dataset.url)
+        })
+      })
+
+      updateApplyBtn()
+    }
+
+    function selectImage(url) {
+      selectedUrl = url
+      document.querySelectorAll('.card').forEach(function (el) {
+        el.classList.toggle('selected', el.dataset.url === url)
+      })
+      updateApplyBtn()
+      setStatus(url === currentUrl ? 'Current background' : 'Selected — click Apply to confirm')
+    }
+
+    function updateApplyBtn() {
+      document.getElementById('applyBtn').disabled = !selectedUrl
+    }
+
+    function updatePager() {
+      const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+      document.getElementById('pageInfo').textContent =
+        'Page ' + (page + 1) + ' / ' + totalPages + ' (' + totalCount + ' total)'
+      document.getElementById('prevBtn').disabled = page <= 0
+      document.getElementById('nextBtn').disabled = (page + 1) * PAGE_SIZE >= totalCount
+    }
+
+    function setStatus(text) {
+      document.getElementById('status').textContent = text
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', function () {
+      if (page > 0) loadPage(page - 1)
+    })
+
+    document.getElementById('nextBtn').addEventListener('click', function () {
+      if ((page + 1) * PAGE_SIZE < totalCount) loadPage(page + 1)
+    })
+
+    document.getElementById('applyBtn').addEventListener('click', async function () {
+      if (!selectedUrl) return
+      const btn = document.getElementById('applyBtn')
+      btn.disabled = true
+      btn.textContent = 'Applying...'
+      try {
+        await callPlugin('applyBackgroundImage', {
+          url: selectedUrl,
+          filePath: currentFilePath
+        })
+        currentUrl = selectedUrl
+        setStatus('Background applied')
+      } catch (e) {
+        setStatus('Failed to apply: ' + (e.message || ''))
+      } finally {
+        btn.textContent = 'Apply'
+        updateApplyBtn()
+      }
+    })
+
+    function escapeHtml(str) {
+      const div = document.createElement('div')
+      div.textContent = str
+      return div.innerHTML
+    }
+
+    function escapeAttr(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+    }
+  </script>
 </body>
 
 </html>
