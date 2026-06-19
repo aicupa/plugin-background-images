@@ -1,8 +1,10 @@
-const { createPlugin } = require("@aicupa/api");
-
 const API_BASE = "http://api.nekosapi.com/v4/images";
 
-module.exports = createPlugin((api) => {
+/**
+ * @param {import('@aicupa/api').PluginApi} api
+ * @returns {import('@aicupa/api').Plugin}
+ */
+module.exports = (api) => {
   return {
     async fetchImages({ offset = 0, limit = 6, rating } = {}) {
       try {
@@ -14,11 +16,11 @@ module.exports = createPlugin((api) => {
           params.set("rating", rating);
         }
         const url = `${API_BASE}?${params.toString()}`;
-        const res = await fetch(url);
+        const res = await api.fetch(url);
         if (!res.ok) {
           return { ok: false, error: `API error: ${res.status}` };
         }
-        const data = await res.json();
+        const data = res.body;
         return { ok: true, result: data };
       } catch (e) {
         return { ok: false, error: e.message || "Failed to fetch images" };
@@ -53,4 +55,4 @@ module.exports = createPlugin((api) => {
       return { ok: true, result: { url } };
     },
   };
-});
+};
