@@ -1,6 +1,6 @@
 {
   "name": "@aicupa/plugin-background-images",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Browse and apply background images for Todolist (Only for Desktop App)",
   "main": "./service",
   "view": "./view",
