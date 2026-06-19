@@ -20,7 +20,7 @@ module.exports = (api) => {
         if (!res.ok) {
           return { ok: false, error: `API error: ${res.status}` };
         }
-        const data = res.body;
+        const data = JSON.parse(res.body);
         return { ok: true, result: data };
       } catch (e) {
         return { ok: false, error: e.message || "Failed to fetch images" };
