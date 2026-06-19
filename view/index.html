@@ -146,6 +146,33 @@
       gap: 8px;
     }
 
+    .page-jump {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .page-jump input {
+      width: 40px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: inherit;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .page-jump input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .page-jump span {
+      font-size: 12px;
+      opacity: 0.6;
+    }
+
     button {
       border: 1px solid var(--border);
       background: transparent;
@@ -269,6 +296,11 @@
   <div class="footer">
     <div class="pager">
       <button id="prevBtn" disabled>Previous</button>
+      <div class="page-jump">
+        <input id="pageJumpInput" type="text" inputmode="numeric" aria-label="Page number">
+        <span>/</span>
+        <span id="totalPagesLabel">1</span>
+      </div>
       <button id="nextBtn" disabled>Next</button>
     </div>
     <span class="status" id="status"></span>
@@ -460,6 +492,8 @@
         'Page ' + (page + 1) + ' / ' + totalPages + ' (' + totalCount + ' total)'
       document.getElementById('prevBtn').disabled = page <= 0
       document.getElementById('nextBtn').disabled = (page + 1) * PAGE_SIZE >= totalCount
+      document.getElementById('pageJumpInput').value = page + 1
+      document.getElementById('totalPagesLabel').textContent = totalPages
     }
 
     function setStatus(text) {
@@ -472,6 +506,22 @@
 
     document.getElementById('nextBtn').addEventListener('click', function () {
       if ((page + 1) * PAGE_SIZE < totalCount) loadPage(page + 1)
+    })
+
+    document.getElementById('pageJumpInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        var totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+        var target = parseInt(this.value, 10)
+        if (target >= 1 && target <= totalPages && target !== page + 1) {
+          loadPage(target - 1)
+        } else {
+          this.value = page + 1
+        }
+      }
+    })
+
+    document.getElementById('pageJumpInput').addEventListener('blur', function () {
+      this.value = page + 1
     })
 
     document.getElementById('ratingSelect').addEventListener('change', function (e) {
